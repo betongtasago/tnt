@@ -107,3 +107,5 @@
     font-size: 8px;
   }
 }
+
+.admin-order-hint{font-size:10px;font-weight:800;color:#238a78;background:#e7f8f2;border-radius:8px;padding:8px 10px;white-space:nowrap}.order-btn{font-size:15px;color:#2f6ee2;padding:4px 5px}.order-btn:hover{background:#eaf3ff;color:#1f58b7}.row-actions .danger-btn{margin-left:1px}@media(max-width:760px){.admin-order-hint{width:100%;text-align:center}.row-actions{min-width:145px}}
