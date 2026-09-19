@@ -13,3 +13,9 @@
 .account-switch{display:block;width:100%;margin-top:13px;background:transparent;color:#2f6ee2;font-size:11px;font-weight:800}.success-message{margin-top:16px;background:#e5f8ef;color:#167c5c;padding:10px;border-radius:8px;font-size:11px}
 
 .account-options{padding:12px}.account-options button{width:100%;display:flex;align-items:center;gap:12px;text-align:left;background:#fff;border:1px solid #e5edf3;border-radius:13px;padding:13px 14px;margin-bottom:9px;color:#20394e;transition:.2s ease}.account-options button:hover{border-color:#65cdbf;background:#f3fbfa;transform:translateY(-1px)}.account-options button span:nth-child(2){flex:1}.account-options b{display:block;font-size:12px}.account-options small{display:block;color:#8999a5;font-size:10px;margin-top:3px}.account-options strong{font-size:20px;color:#8aa0ad}.option-icon{width:30px;height:30px;display:grid;place-items:center;border-radius:9px;background:#e8f7f4;color:#138b78;font-weight:800;font-size:12px}.account-subpanel{padding-top:4px}.back-link{margin:0 20px 4px;border:0;background:none;color:#3677d6;font-size:11px;font-weight:800;cursor:pointer}.account-subpanel .settings-card{padding-top:10px}
+
+/* TSG-TNT watermark on login */
+.login{position:relative;overflow:hidden;isolation:isolate}
+.login:before{content:'';position:absolute;z-index:-1;left:50%;top:50%;width:min(760px,92vw);height:min(390px,48vw);transform:translate(-50%,-50%);background:url('/tsg-tnt-logo.png') center/contain no-repeat;opacity:.12;filter:grayscale(1) saturate(.55);mix-blend-mode:multiply;pointer-events:none}
+.login-card{position:relative;z-index:1}
+@media(max-width:560px){.login:before{width:125vw;height:63vw;opacity:.09}.login-card{padding:30px 24px}}
