@@ -1,7 +1,4 @@
-import {issueToken,validLogin} from './_auth';
-
-export const config={runtime:'nodejs20.x'};
-
+import {issueToken,validLogin}from './_auth';
 export default async function handler(req:any,res:any){
   if(req.method!=='POST')return res.status(405).json({message:'Method Not Allowed'});
   try{
