@@ -1,151 +1,28 @@
-export type UserRole = 'admin' | 'member';
-
-export interface User {
-  id: string;
-  username: string;
-  fullName: string;
-  role: UserRole;
-  password?: string;
-  stationIds: string[]; // ['all'] or list of station ids
-  stationId?: string;   // single primary station if member
-  phone: string;
-  email: string;
-  active: boolean;
-  isActive?: boolean;
-  createdAt: string;
-}
-
-export interface Station {
-  id: string;
-  code: string;
-  name: string;
-  address: string;
-  hotline?: string;
-  capacity?: string;
-  managerName: string;
-  managerPhone: string;
-  active?: boolean;
-}
-
-export type ConcreteCategory = 'commercial' | 'trialmix';
-
-export type ConcreteAgeType = 
-  | 'R3' 
-  | 'R7' 
-  | 'R14' 
-  | 'R28' 
-  | 'R60' 
-  | 'R90' 
-  | 'R28_WATERPROOF' 
-  | 'EXPANSION' 
-  | 'CUSTOM';
-
-export type SampleShape = 
-  | 'cube_150'          // Mẫu vuông 150x150x150mm
-  | 'cylinder_150_300'  // Mẫu trụ Ø150x300mm
-  | 'waterproof_150'    // Mẫu chống thấm Ø150x150mm
-  | 'expansion'         // Mẫu bù co ngót / uốn
-  | 'other';            // Loại khác
-
-export type SampleStatus = 
-  | 'pending'         // Chưa đến hạn
-  | 'due_today'       // Đến hạn hôm nay
-  | 'overdue'         // Quá hạn chưa nén
-  | 'tested_passed'   // Đã nén - Đạt yêu cầu
-  | 'tested_failed'   // Đã nén - Không đạt
-  | 'cancelled';      // Đã hủy
-
-export interface PieceResult {
-  pieceNumber: number;
-  weightKg?: number;
-  failureLoadKn?: number;     // Lực phá hoại (kN)
-  measuredStrengthMpa: number; // Cường độ nén (MPa hoặc daN/cm2)
-}
-
-export interface TestResultData {
-  testDate: string;           // YYYY-MM-DD
-  testedBy: string;           // Kỹ thuật viên nén
-  machineCode: string;        // Mã máy nén
-  pieceResults: PieceResult[];
-  avgStrengthMpa: number;     // Cường độ trung bình (MPa)
-  designStrengthMpa: number;  // Cường độ thiết kế (MPa)
-  percentageOfDesign: number; // % đạt so với mác thiết kế
-  isPassed: boolean;          // Đạt / Không đạt
-  notes?: string;
-  certificateNumber?: string;
-}
-
-export interface ConcreteSample {
-  id: string;                 // Mã mẫu (e.g. TSG-2026-001)
-  sampleCode?: string;        // Trường cũ, giữ tùy chọn để đọc dữ liệu đã lưu
-  category: ConcreteCategory; // Bê tông đã cấp / Trialmix
-  stationId: string;          // Trạm trộn
-  projectName: string;        // Tên công trình
-  contractor: string;         // Đơn vị thi công / Khách hàng
-  contactPerson: string;      // Người liên hệ tại công trình
-  contactPhone: string;       // SĐT người liên hệ
-  location: string;           // Địa chỉ / Vị trí đổ
-  component: string;          // Hạng mục (Móng, Cột, Dầm sàn, Vách...)
-  volumeM3: number;           // Khối lượng bê tông (m3)
-  castDate: string;           // Ngày đúc mẫu (YYYY-MM-DD)
-  castTime?: string;          // Giờ đúc
-  concreteGrade: string;      // Mác bê tông (M200, M250, M300, M350, M400, M450, M500, M600, B20, B25, B30...)
-  slumpCm: string;            // Độ sụt (cm) (ví dụ: 12±2, 14±2, 16±2, xòe 600)
-  ageType: ConcreteAgeType;   // Tuổi nén
-  ageDays: number;            // Số ngày tuổi (3, 7, 14, 28, 60, 90...)
-  scheduledTestDate: string;  // Ngày nén mẫu dự kiến (YYYY-MM-DD)
-  lasRoomName?: string;        // Tên phòng LAS thực hiện nén mẫu
-  sampleShape: SampleShape;   // Loại mẫu (Vuông, Trụ, Chống thấm...)
-  groupCount: number;         // Số tổ mẫu (thường 1 tổ)
-  pieceCount: number;         // Số viên mẫu (thường 3 viên/tổ)
-  samplerName: string;        // Người lấy mẫu / Kỹ thuật viên
-  witnessPerson?: string;     // Người chứng kiến / Giám sát tư vấn
-  status: SampleStatus;       // Tình trạng nén mẫu
-  testResult?: TestResultData;// Kết quả nén mẫu (nếu đã nén)
-  notes?: string;             // Ghi chú
-  createdBy: string;          // Username người tạo
-  createdByName: string;      // Họ tên người tạo
-  createdAt: string;          // Thời gian tạo
-  updatedAt: string;          // Thời gian cập nhật
-  lastNotifiedAt?: string;    // Lần gửi thông báo gần nhất
-}
-
-export interface NotificationLog {
-  id: string;
-  timestamp: string;
-  channel: 'email';
-  recipient: string;
-  sampleIds: string[];
-  sampleInfoSummary: string;
-  messageContent: string;
-  status: 'success' | 'failed' | 'simulated';
-  errorDetails?: string;
-}
-
-export interface NotificationConfig {
-  autoEmailEnabled: boolean;
-  emailRecipients: string[];
-  emailSender: string;
-  reminderDaysBefore: number; // 0 = ngày đến hạn, 1 = trước 1 ngày
-  autoSendHour: number;       // Giờ gửi tự động (ví dụ: 7 = 7:00 sáng)
-  autoSendMinute?: number;     // Phút gửi tự động (mặc định: 0)
-  enableSoundAlert: boolean;
-  smtpHost?: string;
-  smtpPort?: number;
-  smtpUser?: string;
-  smtpPass?: string;
-  smtpSecure?: boolean; // Legacy fields retained for migration compatibility.
-  gmailRelayUrl?: string;
-}
-
-export interface SampleFilterOptions {
-  stationId: string;          // 'all' or stationId
-  category: string;           // 'all' | 'commercial' | 'trialmix'
-  status: string;             // 'all' | SampleStatus
-  ageType: string;            // 'all' | ConcreteAgeType
-  grade: string;              // 'all' | string
-  searchQuery: string;        // search in project, contractor, phone, component, code
-  fromDate: string;           // YYYY-MM-DD
-  toDate: string;             // YYYY-MM-DD
-  dateFilterType: 'scheduled' | 'cast';
-}
+export type VehicleStatus = 'active' | 'maintenance' | 'inactive';
+export type ExpiryState = 'expired' | 'urgent' | 'warning' | 'valid' | 'unknown';
+export interface Vehicle { id:string; plateNumber:string; vehicleCode:string; brand:string; model:string; capacityM3:number; driverName:string; driverPhone:string; station:string; inspectionExpiry:string; insuranceExpiry:string; insuranceProvider:string; insurancePolicyNumber:string; status:VehicleStatus; notes:string; createdAt:string; updatedAt:string; }
+export interface NotificationConfig { autoEmailEnabled:boolean; emailRecipients:string[]; emailSender:string; reminderDaysBefore:number; autoSendHour:number; autoSendMinute:number; }
+export interface NotificationLog { id:string; timestamp:string; recipients:string[]; vehicleIds:string[]; status:'success'|'failed'|'simulated'; message:string; }
+export interface AppState { vehicles:Vehicle[]; config:NotificationConfig; notificationLogs:NotificationLog[]; lastCronDate:string; lastCronLog:string; }
+export type VehicleForm = Omit<Vehicle,'id'|'createdAt'|'updatedAt'>;
+export interface AuthUser { username:string; role:string; displayName:string; }
+export const emptyConfig:NotificationConfig={autoEmailEnabled:true,emailRecipients:[],emailSender:'Tasago Fleet',reminderDaysBefore:30,autoSendHour:7,autoSendMinute:0};
+export const emptyState:AppState={vehicles:[],config:emptyConfig,notificationLogs:[],lastCronDate:'',lastCronLog:''};
+export const emptyVehicleForm:VehicleForm={plateNumber:'',vehicleCode:'',brand:'',model:'',capacityM3:0,driverName:'',driverPhone:'',station:'',inspectionExpiry:'',insuranceExpiry:'',insuranceProvider:'',insurancePolicyNumber:'',status:'active',notes:''};
+export function normalizeVehicle(x:Partial<Vehicle>):Vehicle { const now=new Date().toISOString(); return {id:x.id||crypto.randomUUID(),plateNumber:x.plateNumber||'',vehicleCode:x.vehicleCode||'',brand:x.brand||'',model:x.model||'',capacityM3:Number(x.capacityM3||0),driverName:x.driverName||'',driverPhone:x.driverPhone||'',station:x.station||'',inspectionExpiry:x.inspectionExpiry||'',insuranceExpiry:x.insuranceExpiry||'',insuranceProvider:x.insuranceProvider||'',insurancePolicyNumber:x.insurancePolicyNumber||'',status:x.status||'active',notes:x.notes||'',createdAt:x.createdAt||now,updatedAt:now}; }
+export function sanitizeState(x:any):AppState{return {vehicles:Array.isArray(x?.vehicles)?x.vehicles.map(normalizeVehicle):[],config:{...emptyConfig,...(x?.config||{})},notificationLogs:Array.isArray(x?.notificationLogs)?x.notificationLogs:[],lastCronDate:x?.lastCronDate||'',lastCronLog:x?.lastCronLog||''};}
+export function expiryState(date:string,reminderDays=30,today=new Date()):ExpiryState{if(!date)return'unknown';const t=new Date(`${date}T00:00:00`),n=new Date(today.getFullYear(),today.getMonth(),today.getDate()),d=Math.ceil((t.getTime()-n.getTime())/86400000);if(d<0)return'expired';if(d<=7)return'urgent';if(d<=reminderDays)return'warning';return'valid';}
+export function daysUntil(date:string,today=new Date()){if(!date)return null;const t=new Date(`${date}T00:00:00`),n=new Date(today.getFullYear(),today.getMonth(),today.getDate());return Math.ceil((t.getTime()-n.getTime())/86400000);}
+export function formatDate(v?:string){if(!v)return'Chưa cập nhật';const [y,m,d]=v.split('-');return y&&m&&d?`${d}/${m}/${y}`:v;}
+export function getVehicleAlert(v:Vehicle,days=30):ExpiryState{const a=expiryState(v.inspectionExpiry,days),b=expiryState(v.insuranceExpiry,days),r:any={unknown:0,valid:1,warning:2,urgent:3,expired:4};return r[a]>=r[b]?a:b;}
+export function getAlertText(v:Vehicle,days=30){return [['Đăng kiểm',v.inspectionExpiry],['Bảo hiểm',v.insuranceExpiry]].map(([label,date])=>{const s=expiryState(date,days),d=daysUntil(date);return s!=='valid'&&s!=='unknown'?`${label}: ${s==='expired'?'đã hết hạn':`còn ${d} ngày`}`:''}).filter(Boolean).join(' · ')||'Các giấy tờ còn hiệu lực';}
+export const statusLabel={active:'Đang hoạt động',maintenance:'Bảo dưỡng',inactive:'Ngừng hoạt động'} as Record<VehicleStatus,string>;
+export const statusTone={active:'valid',maintenance:'warning',inactive:'muted'} as Record<VehicleStatus,string>;
+export function isAlert(v:Vehicle,days=30){return['expired','urgent','warning'].includes(getVehicleAlert(v,days));}
+export function formatTime(v:string){return new Date(v).toLocaleString('vi-VN');}
+export function getAuthToken(){return localStorage.getItem('tnt_auth_token')||'';} export function setAuthToken(v:string|null){v?localStorage.setItem('tnt_auth_token',v):localStorage.removeItem('tnt_auth_token');}
+export function getAuthUser():AuthUser|null{try{return JSON.parse(localStorage.getItem('tnt_auth_user')||'null')}catch{return null;}} export function setAuthUser(v:AuthUser|null){v?localStorage.setItem('tnt_auth_user',JSON.stringify(v)):localStorage.removeItem('tnt_auth_user');}
+export function getApiUrl(){return(import.meta.env.VITE_API_URL||'').replace(/\/$/,'');}
+export async function api(path:string,init:RequestInit={}){const h=new Headers(init.headers);h.set('Content-Type','application/json');const t=getAuthToken();if(t)h.set('Authorization',`Bearer ${t}`);return fetch(`${getApiUrl()}${path}`,{...init,headers:h});}
+export function exportVehicles(vs:Vehicle[]){const esc=(v:any)=>`"${String(v??'').replaceAll('"','""')}"`;const rows=[['Biển số','Mã xe','Hãng','Model','Dung tích (m³)','Tài xế','SĐT','Trạm','Hạn đăng kiểm','Hạn bảo hiểm','Nhà bảo hiểm','Số hợp đồng','Trạng thái'],...vs.map(v=>[v.plateNumber,v.vehicleCode,v.brand,v.model,v.capacityM3,v.driverName,v.driverPhone,v.station,v.inspectionExpiry,v.insuranceExpiry,v.insuranceProvider,v.insurancePolicyNumber,statusLabel[v.status]])];const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([rows.map(r=>r.map(esc).join(',')).join('\n')],{type:'text/csv;charset=utf-8'}));a.download=`xe-bon-${new Date().toISOString().slice(0,10)}.csv`;a.click();}
+export const initialState:AppState={...emptyState,vehicles:[normalizeVehicle({id:'demo-1',plateNumber:'51D-123.45',vehicleCode:'BT-01',brand:'Hino',model:'700',capacityM3:10,driverName:'Nguyễn Văn Minh',driverPhone:'0901000001',station:'Tasago Hóc Môn',inspectionExpiry:'2026-10-04',insuranceExpiry:'2026-11-18',insuranceProvider:'Bảo Việt',insurancePolicyNumber:'BV-2026-0001'}),normalizeVehicle({id:'demo-2',plateNumber:'51D-678.90',vehicleCode:'BT-02',brand:'Isuzu',model:'FVM',capacityM3:8,driverName:'Trần Quốc Huy',driverPhone:'0901000002',station:'Tasago Xuyên Á',inspectionExpiry:'2026-09-25',insuranceExpiry:'2026-09-20',insuranceProvider:'PVI',insurancePolicyNumber:'PVI-2026-0088'})]};
