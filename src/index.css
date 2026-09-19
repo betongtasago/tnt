@@ -109,3 +109,5 @@
 }
 
 .admin-order-hint{font-size:10px;font-weight:800;color:#238a78;background:#e7f8f2;border-radius:8px;padding:8px 10px;white-space:nowrap}.order-btn{font-size:15px;color:#2f6ee2;padding:4px 5px}.order-btn:hover{background:#eaf3ff;color:#1f58b7}.row-actions .danger-btn{margin-left:1px}@media(max-width:760px){.admin-order-hint{width:100%;text-align:center}.row-actions{min-width:145px}}
+
+.stat-button{width:100%;border:0;text-align:left;color:inherit;cursor:pointer}.stat-button.selected{border-color:#4e9ce7;box-shadow:0 0 0 3px #4e9ce71a,0 15px 30px #213b5c14}.stat-button:focus-visible{outline:3px solid #5b96ee;outline-offset:2px}.stat-button-warn.selected{border-color:#d5a33d;box-shadow:0 0 0 3px #d5a33d1c,0 15px 30px #213b5c14}.stat-button-danger.selected{border-color:#db5b65;box-shadow:0 0 0 3px #db5b651c,0 15px 30px #213b5c14}
