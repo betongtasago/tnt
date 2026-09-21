@@ -1,5 +1,8 @@
 import type {Vehicle} from './src/types';
-import {formatDate,getAlertText,expiryState} from './src/types';
+
+const formatDate=(value?:string)=>{if(!value)return'Chưa cập nhật';const [year,month,day]=String(value).split('-');return year&&month&&day?`${day}/${month}/${year}`:String(value);};
+const expiryState=(date:string,reminderDays=30,today=new Date())=>{if(!date)return'unknown';const target=new Date(`${date}T00:00:00`);const current=new Date(today.getFullYear(),today.getMonth(),today.getDate());const days=Math.ceil((target.getTime()-current.getTime())/86400000);return days<0?'expired':days<=7?'urgent':days<=reminderDays?'warning':'valid';};
+const getAlertText=(vehicle:Vehicle,days:number)=>[['Đăng kiểm',vehicle.inspectionExpiry],['Bảo hiểm',vehicle.insuranceExpiry]].map(([label,date])=>{const state=expiryState(date,days);if(state==='valid'||state==='unknown')return'';const target=new Date(`${date}T00:00:00`);const current=new Date();const remaining=Math.ceil((target.getTime()-new Date(current.getFullYear(),current.getMonth(),current.getDate()).getTime())/86400000);return`${label}: ${state==='expired'?'đã hết hạn':`còn ${remaining} ngày`}`;}).filter(Boolean).join(' · ')||'Các giấy tờ còn hiệu lực';
 
 type FleetEmailOptions={title?:string;intro?:string;preheader?:string};
 const esc=(v:any)=>String(v??'').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;');
