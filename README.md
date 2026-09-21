@@ -1,185 +1,133 @@
-# HỆ THỐNG QUẢN LÝ TIẾN ĐỘ & KẾT QUẢ NÉN MẪU BÊ TÔNG
-### CÔNG TY CỔ PHẦN ĐẦU TƯ TASAGO
-**Khẩu hiệu:** *BÊ TÔNG XANH SÀI GÒN - BÊ TÔNG CỦA MỌI CÔNG TRÌNH*
+# Tasago TNT Fleet Control
 
----
+Hệ thống web quản lý hồ sơ xe bồn của Tasago, tập trung vào thông tin phương tiện, tài xế, số khung, đăng kiểm, bảo hiểm và nhắc hạn tự động qua email. Ứng dụng chạy trên React + Vite, API serverless trên Vercel và Supabase PostgreSQL là nguồn dữ liệu trung tâm.
 
-## 📌 Giới Thiệu Dự Án
-Hệ thống phần mềm chuyên dụng hỗ trợ theo dõi, cảnh báo tiến độ và quản lý kết quả nén mẫu bê tông thương phẩm & cấp phối thí nghiệm Trialmix dành cho các trạm trộn bê tông của **Công Ty Cổ Phần Đầu Tư Tasago**.
+## Tính năng
 
-Ứng dụng đáp ứng các tiêu chuẩn kỹ thuật xây dựng hiện hành:
-- **TCVN 3118:2022**: Bê tông nặng - Phương pháp xác định cường độ nén.
-- **TCVN 3116:2022**: Bê tông - Phương pháp xác định độ chống thấm nước.
+- Dashboard tổng quan số lượng xe, trạng thái vận hành và cảnh báo giấy tờ.
+- Hồ sơ xe bồn với biển số, mã xe, tài xế, điện thoại, số khung, kích thước, dung tích, trọng lượng, định mức, nhãn hiệu, xuất xứ, năm sản xuất, sở hữu, trạm, ngày xe về, đăng kiểm và bảo hiểm.
+- Tự động phân loại giấy tờ: còn hiệu lực, cần gia hạn, sắp hết hạn và đã hết hạn.
+- Vercel Cron gọi `/api/cron-notify` hằng ngày để gửi cảnh báo qua Gmail HTTPS relay.
+- Tài khoản admin/member, đổi mật khẩu, đổi tên hiển thị, đăng xuất và hạn chế member khỏi cấu hình email.
+- Supabase Realtime/Broadcast và polling dự phòng để đồng bộ thay đổi giữa các phiên đăng nhập.
+- Xuất Excel `.xlsx` chuyên nghiệp gồm sheet Tổng quan và Danh sách xe, đầy đủ cột, bộ lọc, cố định hàng tiêu đề và màu cảnh báo.
+- **Nhập dữ liệu từ ảnh bằng AI:** tải ảnh bảng dữ liệu lên, AI nhận dạng cột/dòng, cho xem trước và sửa nhanh, sau đó người dùng xác nhận để đồng bộ vào Supabase.
+- Giao diện responsive cho máy tính và điện thoại, có logo TSG-TNT và hình xe bồn nền đăng nhập.
 
----
+## Luồng nhập bảng từ ảnh bằng AI
 
-## 🌟 Các Tính Năng Nổi Bật
+1. Đăng nhập và mở mục **Danh sách xe** hoặc Dashboard.
+2. Bấm **Nhập ảnh AI**.
+3. Chọn ảnh PNG, JPG hoặc WEBP của bảng xe bồn.
+4. Bấm **Nhận dạng bằng AI**.
+5. Kiểm tra các dòng trong bảng xem trước; có thể sửa nhanh biển số, tài xế, kích thước, nhãn hiệu, sở hữu, hạn đăng kiểm, hạn bảo hiểm và số khung.
+6. Bấm **Đồng bộ vào dữ liệu**. Các dòng đã xác nhận được chuẩn hóa thành hồ sơ xe và ghi qua `/api/state` vào Supabase.
 
-1. **Quản Lý Đa Trạm Trộn Bê Tông:**
-   - Trạm Tasago Hóc Môn (Hóc Môn, TP.HCM)
-   - Trạm Tasago Xuyên Á (Kcn Xuyên Á, Tây Ninh)
-   - Trạm Tasago Hóa An
-   - Trạm Tasago-Tnt1 Tây Ninh (Kcn Thành Thành Công)
-   - Trạm Tasago-Tnt2 Tây Ninh (Kcn Phước Đông)
+### Giới hạn và kiểm soát chi phí AI
 
-2. **Quản Lý Mẫu Nén Chi Tiết:**
-   - Hỗ trợ bê tông thương phẩm đã cấp cho công trình và mẫu cấp phối thí nghiệm Trialmix.
-   - Các mác thiết kế: M150 đến M600, Bê tông chống thấm (B6, B8, B10, B12), Bê tông bù co ngót, R3, R7, R14, R28.
-   - Nhập số lượng tổ mẫu, số viên, độ sụt, khối lượng, KTV lấy mẫu, người liên hệ công trình.
+Để giữ chi phí trong phạm vi yêu cầu tối đa 300 tín dụng, mỗi yêu cầu chỉ xử lý **một ảnh**, giới hạn ảnh **5 MB**, tối đa **300 dòng**, không tự động retry và chỉ gọi AI một lần. Kết quả không được ghi tự động: người dùng luôn phải xem trước và xác nhận. Ảnh không rõ hoặc dòng không có biển số sẽ bị loại khỏi kết quả để tránh tạo dữ liệu đoán.
 
-3. **Cảnh Báo & Nhắc Nhở Tự Động:**
-   - Đánh dấu trạng thái tự động theo thời gian thực: *Đến hạn hôm nay*, *Quá hạn chưa nén*, *Chưa đến hạn*, *Đã nén đạt / không đạt*.
-   - Trung tâm cảnh báo gửi thông báo lịch nén mẫu tự động qua **Gmail HTTPS relay** với đầy đủ thông tin: Công trình, trạm trộn, mác bê tông, hạng mục, số điện thoại liên hệ.
+Mặc định endpoint dùng model multimodal chi phí thấp `gemini-3-flash-preview`; có thể thay bằng model vision tương thích OpenAI qua `AI_VISION_MODEL`. API AI không được gọi từ trình duyệt và không được đưa secret vào biến `VITE_*`.
 
-4. **Xuất Báo Cáo Excel Chuyên Nghiệp (.xlsx):**
-   - Xuất bảng theo dõi tiến độ nén mẫu theo từng công trình của từng trạm với đầy đủ thông tin doanh nghiệp Tasago, tên khách hàng, tên dự án công trình và danh sách chi tiết các hạng mục, mác, khối lượng, số tổ mẫu, cường độ nén (MPa), % đạt và khung chữ ký xác nhận 3 bên.
-   - Xuất báo cáo tổng hợp theo bộ lọc đa tiêu chí.
+## Công nghệ
 
-5. **Phân Quyền & Bảo Mật:**
-   - Đăng nhập bảo mật (Không hiển thị thông tin tài khoản ngoài màn hình đăng nhập).
-   - Phân quyền: Ban Giám Đốc (Super Admin), Trưởng phòng QC / Admin, Kỹ thuật viên thí nghiệm, Nhân viên trạm.
+- Frontend: React 19, TypeScript, Vite.
+- Backend: Vercel Functions trên Node.js.
+- Database: Supabase PostgreSQL, bảng `app_state` lưu JSONB và `app_users` lưu tài khoản.
+- Đồng bộ: Supabase Realtime Broadcast và polling dự phòng.
+- Excel: `xlsx-js-style`.
+- AI vision: API Chat Completions tương thích OpenAI, trả JSON schema có cấu trúc.
+- Email: Gmail Apps Script HTTPS relay và Vercel Cron.
 
-6. **In Ấn & Chứng Nhận:**
-   - In phiếu kết quả thử nghiệm nén mẫu (Test Certificate) chuẩn A4.
-   - In bảng báo cáo tiến độ nén mẫu toàn trạm.
+## Chạy local
 
----
+Yêu cầu Node.js 18+ và npm.
 
-## 🛠️ Công Nghệ Sử Dụng
-- **Frontend:** React 19, TypeScript, Vite
-- **Styling:** Tailwind CSS v4, Lucide Icons, Motion
-- **Biểu đồ & Xử lý dữ liệu:** Recharts, XLSX (SheetJS)
-- **Lưu trữ:** Supabase PostgreSQL (bản ghi `app_state` với JSONB) làm nguồn dữ liệu trung tâm; LocalStorage chỉ giữ cache offline và tùy chọn giao diện
-
----
-
-## 🚀 Hướng Dẫn Cài Đặt & Chạy Trên Máy Tính (Local)
-
-### 1. Yêu cầu môi trường
-- [Node.js](https://nodejs.org/) phiên bản 18.0 trở lên.
-- Trình quản lý gói `npm` hoặc `yarn`.
-
-### 2. Cài đặt các thư viện phụ thuộc
 ```bash
 npm install
-```
-
-### 3. Khởi chạy máy chủ phát triển (Development Server)
-```bash
 npm run dev
 ```
-Sau đó mở trình duyệt truy cập: `http://localhost:3000`
 
-### 4. Đóng gói mã nguồn cho Production
+Mở `http://localhost:3000`. Kiểm tra production build:
+
+```bash
+npm run lint
+npm run build
+npm start
+```
+
+## Biến môi trường server
+
+Không commit các secret sau vào GitHub:
+
+```env
+SUPABASE_URL=https://your-project.supabase.co
+SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
+AUTH_SECRET=long-random-secret
+
+# AI vision: dùng một provider tương thích OpenAI
+AI_API_KEY=your-ai-key
+AI_API_BASE=https://api.openai.com/v1
+AI_VISION_MODEL=gemini-3-flash-preview
+# Hoặc dùng trực tiếp Gemini API:
+GEMINI_API_KEY=your-gemini-key
+
+# Email/Vercel Cron
+GMAIL_RELAY_URL=https://script.google.com/macros/s/your-id/exec
+GMAIL_RELAY_SECRET=your-relay-secret
+CRON_SECRET=your-cron-secret
+APP_URL=https://tnt-tasago.vercel.app
+```
+
+`OPENAI_API_KEY` và `OPENAI_API_BASE` cũng được chấp nhận làm fallback cho AI. Trong production, chỉ đặt `AI_API_KEY`, `AI_API_BASE` và các secret ở Vercel Project Settings → Environment Variables. Không đặt service role key hoặc AI key vào `VITE_SUPABASE_*` hay frontend.
+
+## Supabase migrations
+
+Chạy các migration trong thư mục [`supabase/migrations`](./supabase/migrations) theo thứ tự tên file:
+
+- `202609190001_create_fleet_state.sql`: bảng trạng thái đội xe.
+- `202609190002_add_admin_password_hash.sql`: mật khẩu admin.
+- `202609190003_create_app_users.sql`: tài khoản member/admin.
+- `202609190004_add_admin_display_name.sql`: tên hiển thị admin.
+
+Ứng dụng dùng service role ở server để đọc/ghi `app_state`; frontend không truy cập bằng service role. Khi đồng bộ ảnh, dữ liệu đi qua API có xác thực rồi mới được ghi vào Supabase.
+
+## Gmail relay và Cron
+
+Tạo Google Apps Script Web App từ file `scripts/gmail-relay/Code.gs` của dự án, đặt `RELAY_SECRET`, triển khai quyền **Anyone with the link**, sau đó nhập URL và secret vào Vercel. Cron trong `vercel.json` chạy `/api/cron-notify` lúc `00:00 UTC`, tương đương khoảng 07:00 giờ Việt Nam. Endpoint kiểm tra `CRON_SECRET`, đọc dữ liệu Supabase và chỉ gửi các xe đến ngưỡng cảnh báo.
+
+## API chính
+
+| Endpoint | Mục đích |
+|---|---|
+| `POST /api/login` | Đăng nhập admin/member |
+| `POST /api/register` | Đăng ký member |
+| `POST /api/change-password` | Đổi mật khẩu tài khoản hiện tại |
+| `POST /api/change-profile` | Đổi tên hiển thị |
+| `GET/PUT /api/state` | Đọc/ghi hồ sơ xe và cấu hình |
+| `POST /api/import-image` | AI nhận dạng ảnh bảng, tối đa 300 dòng |
+| `GET /api/health` | Kiểm tra health function |
+| `GET /api/cron-notify` | Chạy nhắc hạn theo Vercel Cron |
+
+## Deploy Vercel
+
+Repository GitHub: `betongtasago/tnt`. Kết nối repository với Vercel, đặt đầy đủ biến môi trường Production, chạy migration Supabase và Redeploy. Vercel tự build bằng:
+
 ```bash
 npm run build
 ```
 
----
+Alias production hiện tại: <https://tnt-tasago.vercel.app>
 
-## Cấu hình Supabase (bắt buộc cho production)
+## Bảo mật và vận hành
 
-Tạo một project trên [Supabase](https://supabase.com/dashboard), mở **SQL Editor** và chạy toàn bộ file [`supabase/migrations/202608230001_create_app_state.sql`](./supabase/migrations/202608230001_create_app_state.sql). Migration tạo bảng `public.app_state`, bật RLS, chỉ cấp quyền cho `service_role` và đăng ký bảng với Realtime.
+- Service role key Supabase, AI key, Gmail relay secret và cron secret chỉ nằm ở server.
+- Member không thể đọc hoặc sửa cấu hình email từ API.
+- Import ảnh yêu cầu token đăng nhập và không ghi dữ liệu nếu chưa có bước xác nhận trên giao diện.
+- Dữ liệu OCR cần được đối chiếu với ảnh gốc trước khi sử dụng làm hồ sơ chính thức.
+- Khi thay đổi schema, tạo migration mới thay vì sửa migration đã chạy trên production.
 
-Lấy **Project URL** cùng **service-role/secret key** trong phần API của project rồi khai báo `SUPABASE_URL` và `SUPABASE_SERVICE_ROLE_KEY` trên Render cùng với `AUTH_SECRET`. Không đưa service-role key vào biến `VITE_*`, mã frontend, trình duyệt hoặc GitHub. Khi `NODE_ENV=production`, backend sẽ từ chối khởi động nếu thiếu hai biến Supabase thay vì âm thầm ghi vào filesystem tạm.
+## Bản quyền
 
-Ở lần khởi động đầu tiên, backend tạo bản ghi mặc định từ dữ liệu mẫu hoặc nhập `data/server-state.json` hiện có nếu bản ghi Supabase chưa tồn tại. Sau đó mọi thao tác CRUD, cấu hình và nhật ký thông báo đều được ghi qua Supabase; LocalStorage chỉ là cache offline.
-
-## Lịch nén mẫu và link trong Email
-
-Khi thêm hoặc chỉnh sửa lịch nén mẫu, biểu mẫu không còn yêu cầu nhập **Mã Số Mẫu Hiện Trường**. Dữ liệu cũ có trường này vẫn được giữ để tương thích, nhưng lịch mới có thể nhập **Tên Phòng LAS Nén Mẫu**.
-
-Email lịch nén mẫu có nút **Mở đúng lịch mẫu này**. Link sử dụng tham số `sampleId`; khi người nhận mở link và đăng nhập, website sẽ chuyển tới tab lịch nén và mở chi tiết đúng mẫu. Để link trong email gửi từ server hoặc Vercel Cron đúng domain production, đặt biến `APP_URL` bằng URL website, ví dụ `https://nenmauv2.vercel.app`. Email gửi từ Trung tâm Email trên trình duyệt sẽ tự dùng domain hiện tại.
-
-## 📦 Hướng Dẫn Đẩy Lên GitHub
-
-```bash
-# Khởi tạo kho lưu trữ git cục bộ
-git init
-
-# Thêm toàn bộ mã nguồn
-git add .
-
-# Tạo commit đầu tiên
-git commit -m "Initial commit: He thong quan ly tien do nen mau be tong Tasago"
-
-# Đặt nhánh chính là main
-git branch -M main
-
-# Liên kết với repository trên GitHub của bạn (thay YOUR_USERNAME và REPO_NAME)
-git remote add origin https://github.com/YOUR_USERNAME/tasago-concrete-lab.git
-
-# Đẩy code lên GitHub
-git push -u origin main
-```
-
----
-
-## 🏢 Bản Quyền & Phát Triển
 **CÔNG TY CỔ PHẦN ĐẦU TƯ TASAGO**  
-*BÊ TÔNG XANH SÀI GÒN - BÊ TÔNG CỦA MỌI CÔNG TRÌNH*  
-Phòng Quản Lý Kỹ Thuật & Kiểm Định Chất Lượng Bê Tông (QA/QC)
-
-
-### Cấu hình gửi Email tự động qua Gmail HTTPS relay
-
-Trung tâm thông báo chỉ hiển thị và hoạt động với tài khoản `admin`. Bản production mới **không còn gửi trực tiếp đến Gmail SMTP**, vì Render Free đã chặn outbound TCP đến các cổng SMTP `25`, `465` và `587`.[1] Email được chuyển qua một Google Apps Script HTTPS relay, rồi `GmailApp` gửi bằng chính tài khoản Gmail của công ty.
-
-#### Bước 1: Tạo Gmail HTTPS relay
-
-Mở [script.google.com](https://script.google.com/) bằng tài khoản Gmail dùng để gửi báo cáo, tạo một project mới và sao chép nội dung file `scripts/gmail-relay/Code.gs` trong repository vào trình soạn thảo. Thay:
-
-```javascript
-const RELAY_SECRET = 'THAY_BANG_CHUOI_BI_MAT_DAI';
-```
-
-bằng một chuỗi bí mật dài tối thiểu 32 ký tự. Giữ nguyên chuỗi này để nhập vào Render và Vercel.
-
-Bấm **Deploy → New deployment → Web app**, chọn chạy dưới tài khoản Gmail của bạn và chọn **Anyone with the link**. Bấm **Deploy**, cấp các quyền Gmail được yêu cầu, sau đó sao chép **Web app URL** có dạng `https://script.google.com/macros/s/.../exec`.
-
-#### Bước 2: Cấu hình Render
-
-Trong **Render → Service → Environment**, thêm:
-
-```env
-GMAIL_RELAY_URL=https://script.google.com/macros/s/MA_ID_CUA_BAN/exec
-GMAIL_RELAY_SECRET=chuoi-bi-mat-giong-trong-Code.gs
-CRON_SECRET=mot-chuoi-bi-mat-dai
-```
-
-Giữ nguyên các biến Supabase và xác thực hiện có: `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `AUTH_SECRET` và `FRONTEND_ORIGIN`. Không cần đặt `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`, `SMTP_FROM` nữa. Sau khi lưu biến, chọn **Manual Deploy → Deploy latest commit**.
-
-#### Bước 3: Cấu hình Vercel Cron
-
-Trong **Vercel → Project Settings → Environment Variables → Production**, thêm:
-
-```env
-SUPABASE_URL=https://mqzampgzppxeppyuqvxm.supabase.co
-SUPABASE_SERVICE_ROLE_KEY=service-role-key-cua-Supabase
-GMAIL_RELAY_URL=https://script.google.com/macros/s/MA_ID_CUA_BAN/exec
-GMAIL_RELAY_SECRET=chuoi-bi-mat-giong-trong-Code.gs
-CRON_SECRET=mot-chuoi-bi-mat-dai
-VITE_API_URL=https://nenmauv2-u9xx.onrender.com
-```
-
-`CRON_SECRET` trên Vercel phải giống hệt `CRON_SECRET` trên Render. `GMAIL_RELAY_URL` và `GMAIL_RELAY_SECRET` cũng phải giống cấu hình Render. Vercel Cron chạy `/api/cron-notify` lúc `00:00 UTC`, tương ứng khoảng 07:00 giờ Việt Nam, đọc mẫu đến hạn từ Supabase rồi gọi Gmail relay qua HTTPS. Sau khi thêm biến Vercel, chọn **Redeploy**.
-
-#### Bước 4: Cấu hình trong website
-
-Mở `https://nenmauv2.vercel.app`, đăng nhập bằng tài khoản `admin`, mở **Trung tâm thông báo Email** và nhập tên hiển thị người gửi, ví dụ `Bê Tông Tasago`. Không nhập SMTP Host, SMTP Port hoặc App Password vào website nữa. Thêm danh sách người nhận báo cáo, bấm **Kiểm tra Gmail relay**, rồi bấm **Lưu cấu hình**. Website chỉ lưu người nhận, lịch gửi và tên hiển thị vào Supabase; secret relay chỉ nằm trong biến môi trường server.
-
-#### Bước 5: Gửi thử và bật tự động
-
-Trong Trung tâm Email, chuyển sang **Gửi Email**, chọn một mẫu nhỏ và bấm **Gửi email ngay**. Nếu email đến hộp thư, kiểm tra tiếp tab **Lịch sử** và bật **Email tự động hằng ngày**. Nút **Chạy thử cron** giúp kiểm tra luồng đọc dữ liệu Supabase và gửi báo cáo trước khi chờ lịch 07:00.
-
-Nếu báo `Chưa cấu hình GMAIL_RELAY_URL`, kiểm tra Render và Vercel đã có đúng hai biến `GMAIL_RELAY_URL` và `GMAIL_RELAY_SECRET`, rồi redeploy. Nếu báo `Unauthorized`, chuỗi `GMAIL_RELAY_SECRET` không trùng với `RELAY_SECRET` trong Google Apps Script. Nếu báo HTTP `403`, hãy vào **Deploy → Manage deployments**, xác nhận loại là **Web app**, URL đang dùng kết thúc bằng `/exec` (không phải `/dev`), ứng dụng chạy dưới tài khoản Gmail gửi thư và quyền truy cập là **Anyone with the link**; sau khi đổi mã hoặc quyền, hãy tạo deployment/version mới rồi cập nhật lại `GMAIL_RELAY_URL`. Nếu báo `GmailApp lỗi`, mở Apps Script bằng đúng tài khoản Gmail gửi thư và cấp lại quyền gửi email.
-
-Không đưa `SUPABASE_SERVICE_ROLE_KEY`, `GMAIL_RELAY_SECRET` hoặc `CRON_SECRET` vào GitHub/frontend. Kênh nhắn tin khác chưa được bật trong phiên bản hiện tại.
-
-## Tài liệu tham khảo
-
-[1]: https://render.com/changelog/free-web-services-will-no-longer-allow-outbound-traffic-to-smtp-ports "Render: Free web services and SMTP ports"
-
-[2]: https://developers.google.com/apps-script/guides/web "Google: Apps Script Web Apps"
-
-[3]: https://developers.google.com/apps-script/reference/gmail/gmail-app "Google: GmailApp reference"
+TSG-TNT — *Cất cánh vươn cao*
