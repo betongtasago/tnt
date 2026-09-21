@@ -1,66 +1,32 @@
-import { readUser } from '../_auth.js';
-import { sendViaGmailRelay } from '../../gmailRelay.js';
-import { buildFleetEmail } from '../../emailTemplate.js';
-import { expiryState, type Vehicle } from '../../src/types.js';
-
 const isEmail = (value: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
-
-export const config = {
-  api: {
-    bodyParser: {
-      sizeLimit: '2mb',
-    },
-  },
-};
+const secret = () => process.env.AUTH_SECRET || 'tnt-development-secret-change-me';
+const checksum = (value: string) => { let h = 2166136261; for (let i = 0; i < value.length; i++) { h ^= value.charCodeAt(i); h = Math.imul(h, 16777619); } return (h >>> 0).toString(36); };
+const readAdmin = (req: any) => { const raw = String(req.headers?.authorization || '').replace(/^Bearer\s+/, ''); const [body, signature] = raw.split('.'); if (!body || !signature || signature !== checksum(`${body}.${secret()}`)) return false; try { const user = JSON.parse(Buffer.from(body, 'base64url').toString()); return user.exp > Date.now() && user.r === 'admin'; } catch { return false; } };
+const esc = (value: any) => String(value ?? '').replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;');
+const date = (value: any) => { if (!value) return 'Chưa cập nhật'; const [year, month, day] = String(value).split('-'); return year && month && day ? `${day}/${month}/${year}` : String(value); };
+const state = (value: any, days: number) => { if (!value) return 'unknown'; const target = new Date(`${value}T00:00:00`).getTime(); const today = new Date(); const current = new Date(today.getFullYear(), today.getMonth(), today.getDate()).getTime(); const remaining = Math.ceil((target - current) / 86400000); return remaining < 0 ? 'expired' : remaining <= 7 ? 'urgent' : remaining <= days ? 'warning' : 'valid'; };
+const label = (value: string) => value === 'expired' ? 'Đã hết hạn' : value === 'urgent' ? 'Sắp hết hạn' : value === 'warning' ? 'Cần gia hạn' : value === 'valid' ? 'Còn hiệu lực' : 'Chưa cập nhật';
+const alertText = (vehicle: any, days: number) => [['Đăng kiểm', vehicle.inspectionExpiry], ['Bảo hiểm', vehicle.insuranceExpiry]].map(([name, value]) => { const status = state(value, days); return status !== 'valid' && status !== 'unknown' ? `${name}: ${label(status)}` : ''; }).filter(Boolean).join(' · ') || 'Các giấy tờ còn hiệu lực';
+const buildEmail = (vehicles: any[], days: number, attentionCount: number) => { const rows = vehicles.map(vehicle => { const inspection = state(vehicle.inspectionExpiry, days); const insurance = state(vehicle.insuranceExpiry, days); return `<tr><td style="padding:16px 18px;border-bottom:1px solid #e8eef3"><b style="color:#173b63">${esc(vehicle.plateNumber)}</b><br><small style="color:#74879a">${esc(vehicle.vehicleCode || 'Chưa có mã xe')}</small></td><td style="padding:16px 18px;border-bottom:1px solid #e8eef3">${esc(vehicle.station || 'Chưa gán trạm')}<br><small style="color:#74879a">${esc(vehicle.driverName || 'Chưa cập nhật tài xế')}</small></td><td style="padding:16px 18px;border-bottom:1px solid #e8eef3;color:#b54708"><b>${date(vehicle.inspectionExpiry)}</b><br><small>${label(inspection)}</small></td><td style="padding:16px 18px;border-bottom:1px solid #e8eef3;color:#b54708"><b>${date(vehicle.insuranceExpiry)}</b><br><small>${label(insurance)}</small></td><td style="padding:16px 18px;border-bottom:1px solid #e8eef3"><span style="padding:5px 8px;border-radius:999px;background:#fff1f0;color:#b42318;font-size:11px;font-weight:bold">${esc(alertText(vehicle, days))}</span></td></tr>`; }).join(''); return { text: ['Email thử kết nối Tasago Fleet', '', `Có ${attentionCount} xe đang cần lưu ý.`, '', ...vehicles.map(vehicle => `${vehicle.plateNumber || 'Xe'} - ${alertText(vehicle, days)} | Đăng kiểm: ${date(vehicle.inspectionExpiry)} | Bảo hiểm: ${date(vehicle.insuranceExpiry)}`)].join('\n'), html: `<!doctype html><html lang="vi"><body style="margin:0;background:#f3f7fb;font-family:Arial,sans-serif;color:#20384d"><div style="padding:28px 12px"><div style="max-width:760px;margin:auto;background:#fff;border-radius:18px;overflow:hidden;border:1px solid #e2eaf0"><div style="padding:28px 30px;background:linear-gradient(120deg,#173b63,#24668b 65%,#25a98b);color:#fff"><div style="font-size:11px;letter-spacing:2px;font-weight:bold">TASAGO FLEET CONTROL</div><h1 style="margin:12px 0 8px;font-size:25px">Email thử kết nối</h1><p style="margin:0;color:#d9f5f1">Hệ thống nhắc hạn giấy tờ xe bồn đang hoạt động.</p></div><div style="padding:24px 30px"><p style="line-height:1.6">Có <b>${attentionCount}</b> xe đang nằm trong ngưỡng cảnh báo.</p><table cellpadding="0" cellspacing="0" style="width:100%;border:1px solid #e8eef3;border-radius:12px;border-collapse:separate;overflow:hidden"><thead><tr style="background:#f7fafc"><th align="left" style="padding:12px 18px;font-size:11px;color:#74879a">PHƯƠNG TIỆN</th><th align="left" style="padding:12px 18px;font-size:11px;color:#74879a">TRẠM / TÀI XẾ</th><th align="left" style="padding:12px 18px;font-size:11px;color:#74879a">ĐĂNG KIỂM</th><th align="left" style="padding:12px 18px;font-size:11px;color:#74879a">BẢO HIỂM</th><th align="left" style="padding:12px 18px;font-size:11px;color:#74879a">TRẠNG THÁI</th></tr></thead><tbody>${rows || '<tr><td colspan="5" style="padding:24px;text-align:center;color:#74879a">Không có xe cần cảnh báo.</td></tr>'}</tbody></table></div><div style="padding:18px 30px;background:#f7fafc;color:#8798a6;font-size:11px">Email thử từ Tasago Fleet Control.</div></div></div></body></html>` }; };
 
 export default async function handler(req: any, res: any) {
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-  if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method !== 'POST') return res.status(405).json({ success: false, message: 'Method Not Allowed' });
-
-  const user = readUser(req);
-  if (!user || user.role !== 'admin') return res.status(403).json({ success: false, message: 'Chỉ quản trị viên mới được gửi email thử.' });
-
+  if (!readAdmin(req)) return res.status(403).json({ success: false, message: 'Chỉ quản trị viên mới được gửi email thử.' });
   try {
     const body = req.body || {};
-    const recipients = (Array.isArray(body.recipients) ? body.recipients : [])
-      .map((value: unknown) => String(value).trim())
-      .filter(isEmail)
-      .slice(0, 20);
+    const recipients = (Array.isArray(body.recipients) ? body.recipients : []).map((value: unknown) => String(value).trim()).filter(isEmail).slice(0, 20);
     if (!recipients.length) return res.status(400).json({ success: false, message: 'Hãy nhập ít nhất một địa chỉ email hợp lệ.' });
-
     const days = Math.max(0, Math.min(365, Number(body.reminderDaysBefore ?? 30) || 30));
-    const vehicles = (Array.isArray(body.vehicles) ? body.vehicles : []) as Vehicle[];
-    const attention = vehicles.filter(vehicle => {
-      const inspection = expiryState(vehicle.inspectionExpiry, days);
-      const insurance = expiryState(vehicle.insuranceExpiry, days);
-      return ['expired', 'urgent', 'warning'].includes(inspection) || ['expired', 'urgent', 'warning'].includes(insurance);
-    });
+    const vehicles = (Array.isArray(body.vehicles) ? body.vehicles : []);
+    const attention = vehicles.filter((vehicle: any) => ['expired', 'urgent', 'warning'].includes(state(vehicle.inspectionExpiry, days)) || ['expired', 'urgent', 'warning'].includes(state(vehicle.insuranceExpiry, days)));
     const sample = (attention.length ? attention : vehicles).slice(0, 8);
-    const report = buildFleetEmail(sample, days, {
-      title: 'Email thử kết nối Tasago Fleet',
-      intro: attention.length
-        ? `Đây là email thử nghiệm với ${attention.length} xe đang có giấy tờ cần lưu ý.`
-        : 'Đây là email thử nghiệm. Hiện chưa có xe nào nằm trong ngưỡng cảnh báo.',
-      preheader: 'Email thử kết nối hệ thống nhắc hạn giấy tờ xe bồn.',
-    });
-    const result = await sendViaGmailRelay({
-      recipients,
-      subject: `[TASAGO] Email thử kết nối - ${new Date().toLocaleDateString('vi-VN')}`,
-      ...report,
-      senderName: String(body.senderName || 'Tasago Fleet').trim().slice(0, 80),
-    });
-
-    return res.status(200).json({
-      success: true,
-      message: result.message || `Đã gửi email thử tới ${recipients.length} địa chỉ.`,
-      recipients,
-      vehicleCount: sample.length,
-    });
-  } catch (error: any) {
-    console.error('Lỗi gửi email thử:', error);
-    return res.status(502).json({ success: false, message: `Không thể gửi email thử: ${error?.message || 'lỗi không xác định'}` });
-  }
+    const report = buildEmail(sample, days, attention.length);
+    const relayUrl = String(process.env.GMAIL_RELAY_URL || '').trim().replace(/\/$/, '');
+    const relaySecret = String(process.env.GMAIL_RELAY_SECRET || '').trim();
+    if (!relayUrl || !relaySecret) throw Error('Chưa cấu hình GMAIL_RELAY_URL và GMAIL_RELAY_SECRET trên Vercel.');
+    const relayResponse = await fetch(relayUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ to: recipients.join(','), subject: `[TASAGO] Email thử kết nối - ${new Date().toLocaleDateString('vi-VN')}`, htmlBody: report.html, textBody: report.text, name: String(body.senderName || 'Tasago Fleet').trim().slice(0, 80), relaySecret }) });
+    const relayText = await relayResponse.text(); let relay: any = {}; try { relay = relayText ? JSON.parse(relayText) : {}; } catch { relay = { message: relayText }; }
+    if (!relayResponse.ok || relay.success === false) throw Error(relay.message || `Gmail relay HTTP ${relayResponse.status}`);
+    return res.status(200).json({ success: true, message: relay.message || `Đã gửi email thử tới ${recipients.length} địa chỉ.`, recipients, vehicleCount: sample.length });
+  } catch (error: any) { console.error('Lỗi gửi email thử:', error); return res.status(502).json({ success: false, message: `Không thể gửi email thử: ${error?.message || 'lỗi không xác định'}` }); }
 }
