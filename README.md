@@ -27,7 +27,7 @@ Hệ thống web quản lý hồ sơ xe bồn của Tasago, tập trung vào th�
 
 Để giữ chi phí trong phạm vi yêu cầu tối đa 300 tín dụng, mỗi yêu cầu chỉ xử lý **một ảnh**, giới hạn ảnh **5 MB**, tối đa **300 dòng**, không tự động retry và chỉ gọi AI một lần. Kết quả không được ghi tự động: người dùng luôn phải xem trước và xác nhận. Ảnh không rõ hoặc dòng không có biển số sẽ bị loại khỏi kết quả để tránh tạo dữ liệu đoán.
 
-Mặc định endpoint dùng model multimodal `gemini-3.6-flash` khi chạy trực tiếp bằng `GEMINI_API_KEY`; với OpenAI-compatible API có thể dùng `AI_VISION_MODEL` như `gemini-3-flash-preview`; có thể thay bằng model vision tương thích OpenAI qua `AI_VISION_MODEL`. API AI không được gọi từ trình duyệt và không được đưa secret vào biến `VITE_*`.
+Mặc định endpoint dùng model multimodal tiết kiệm `gemini-3.5-flash-lite` khi chạy trực tiếp bằng `GEMINI_API_KEY`; với OpenAI-compatible API có thể dùng `AI_VISION_MODEL` như `gemini-3-flash-preview`; có thể thay bằng model vision tương thích OpenAI qua `AI_VISION_MODEL`. API AI không được gọi từ trình duyệt và không được đưa secret vào biến `VITE_*`.
 
 ## Công nghệ
 
