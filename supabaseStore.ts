@@ -36,6 +36,6 @@ export async function persistSupabaseState(state: AppState) {
 }
 export function subscribeSupabaseState(onState: (state: AppState) => void): (() => void) | null {
   if (!supabase) return null;
-  const channel = supabase.channel('tnt-fleet-state-sync').on('postgres_changes', { event: 'UPDATE', schema: 'public', table: TABLE_NAME, filter: `id=eq.${ROW_ID}` }, payload => onState(rowToState(payload.new, { vehicles: [], config: { autoEmailEnabled: true, emailRecipients: [], emailSender: 'Tasago Fleet', reminderDaysBefore: 30, autoSendHour: 7, autoSendMinute: 0 }, notificationLogs: [], lastCronDate: '', lastCronLog: '' }))).subscribe();
+  const channel = supabase.channel('tnt-fleet-state-sync').on('postgres_changes', { event: 'UPDATE', schema: 'public', table: TABLE_NAME, filter: `id=eq.${ROW_ID}` }, payload => onState(rowToState(payload.new, { vehicles: [], config: { autoEmailEnabled: true, emailRecipients: [], emailSender: 'Tasago-Tnt Cất cánh vươn cao', reminderDaysBefore: 30, autoSendHour: 7, autoSendMinute: 0 }, notificationLogs: [], lastCronDate: '', lastCronLog: '' }))).subscribe();
   return () => { void supabase.removeChannel(channel); };
 }

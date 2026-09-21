@@ -6,7 +6,7 @@ export interface NotificationLog { id:string; timestamp:string; recipients:strin
 export interface AppState { vehicles:Vehicle[]; config:NotificationConfig; notificationLogs:NotificationLog[]; lastCronDate:string; lastCronLog:string; updatedAt?:string; }
 export type VehicleForm = Omit<Vehicle,'id'|'createdAt'|'updatedAt'>;
 export interface AuthUser { username:string; role:string; displayName:string; }
-export const emptyConfig:NotificationConfig={autoEmailEnabled:true,emailRecipients:[],emailSender:'Tasago Fleet',reminderDaysBefore:30,autoSendHour:7,autoSendMinute:0};
+export const emptyConfig:NotificationConfig={autoEmailEnabled:true,emailRecipients:[],emailSender:'Tasago-Tnt Cất cánh vươn cao',reminderDaysBefore:30,autoSendHour:7,autoSendMinute:0};
 export const emptyState:AppState={vehicles:[],config:emptyConfig,notificationLogs:[],lastCronDate:'',lastCronLog:'',updatedAt:''};
 export const emptyVehicleForm:VehicleForm={plateNumber:'',vehicleCode:'',brand:'',model:'',capacityM3:0,dimensions:'',curbWeightKg:0,norm:0,driverName:'',driverPhone:'',chassisNumber:'',origin:'',manufactureYear:0,ownership:'',station:'',vehicleArrivalDate:'',inspectionExpiry:'',inspectionUrl:'',insuranceExpiry:'',insuranceProvider:'',insurancePolicyNumber:'',status:'active',notes:''};
 export function isSafeInspectionUrl(value?:string){try{const url=new URL(String(value||'').trim());return(url.protocol==='https:'||url.protocol==='http:')&&Boolean(url.hostname);}catch{return false;}}
@@ -47,7 +47,7 @@ export async function exportVehicles(vs:Vehicle[],reminderDays=30){
   }
   ws['!cols']=headers.map(h=>({wch:['STT','Năm sản xuất','Định mức'].includes(h)?12:h.includes('Ghi chú')?28:h.includes('tài xế')||h.includes('bảo hiểm')?23:18}));
   ws['!autofilter']={ref:`A1:${XLSX.utils.encode_col(headers.length-1)}${Math.max(rows.length+1,2)}`};ws['!freeze']={xSplit:0,ySplit:1};ws['!rows']=[{hpt:30},...rows.map(()=>({hpt:24}))];
-  const summary=[['BÁO CÁO QUẢN LÝ XE BỒN',''],['Thời điểm xuất file',new Date().toLocaleString('vi-VN')],['Tổng số xe',vs.length],['Đang hoạt động',vs.filter(v=>v.status==='active').length],['Cần xử lý giấy tờ',vs.filter(v=>isAlert(v,reminderDays)).length],['Đã hết hạn',vs.filter(v=>getVehicleAlert(v,reminderDays)==='expired').length],['Ghi chú','File được xuất từ Tasago Fleet Control']];
+  const summary=[['BÁO CÁO QUẢN LÝ XE BỒN',''],['Thời điểm xuất file',new Date().toLocaleString('vi-VN')],['Tổng số xe',vs.length],['Đang hoạt động',vs.filter(v=>v.status==='active').length],['Cần xử lý giấy tờ',vs.filter(v=>isAlert(v,reminderDays)).length],['Đã hết hạn',vs.filter(v=>getVehicleAlert(v,reminderDays)==='expired').length],['Ghi chú','File được xuất từ Tasago-Tnt Cất cánh vươn cao']];
   const overview=XLSX.utils.aoa_to_sheet(summary);overview['!cols']=[{wch:28},{wch:42}];overview['A1'].s={font:{bold:true,color:{rgb:'FFFFFF'},name:'Aptos',sz:16},fill:{fgColor:{rgb:'173B63'}},alignment:{vertical:'center'}};overview['B1'].s=overview['A1'].s;overview['!merges']=[{s:{r:0,c:0},e:{r:0,c:1}}];for(let r=1;r<summary.length;r++){overview[`A${r+1}`].s={font:{bold:true,name:'Aptos',sz:11,color:{rgb:'365268'}},fill:{fgColor:{rgb:'EAF3FA'}}};overview[`B${r+1}`].s={font:{name:'Aptos',sz:11,color:{rgb:'20384D'}}};}overview['!rows']=[{hpt:32},...summary.slice(1).map(()=>({hpt:24}))];
   const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,overview,'Tổng quan');XLSX.utils.book_append_sheet(wb,ws,'Danh sách xe');
   XLSX.writeFile(wb,`tasago-xe-bon-${new Date().toISOString().slice(0,10)}.xlsx`,{compression:true});
